@@ -109,12 +109,12 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 	msg += "MIME-Version: 1.0\r\n"
 
 	// Start outer email body
-	msg += fmt.Sprintf("Content-Type: multipart/mixed; boundary=\"%s\"\r\n", delimeterOuter)
+	msg += fmt.Sprintf("Content-Type: multipart/mixed; boundary=%q\r\n", delimeterOuter)
 
 	msg += fmt.Sprintf("\r\n--%s\r\n", delimeterOuter)
 
 	// Add the text/html body
-	msg += fmt.Sprintf("Content-Type: multipart/alternative; boundary=\"%s\"\r\n", delimeter)
+	msg += fmt.Sprintf("Content-Type: multipart/alternative; boundary=%q\r\n", delimeter)
 
 	if email.TextBody != "" {
 		//place Text message
@@ -138,8 +138,8 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 	buf := bytes.NewBuffer([]byte(msg))
 
 	// Add the attachments
-	buf.WriteString(fmt.Sprintf("\r\n--%s\r\n", delimeterOuter))
 	if len(email.Attachments) > 0 {
+		buf.WriteString(fmt.Sprintf("\r\n--%s\r\n", delimeterOuter))
 
 		for _, attachment := range email.Attachments {
 
