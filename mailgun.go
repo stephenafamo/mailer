@@ -19,9 +19,9 @@ type Mailgun struct {
 // NewMailgun creates an instance of the Mailgun mailer
 // domain (string): Mailgun domain
 // apiKey (string): Mailgun API Key
-func NewMailgun(name, domain, apiKey string) *Mailgun {
+func NewMailgun(name string, impl *mailgun.MailgunImpl) *Mailgun {
 	return &Mailgun{
-		MailgunImpl: mailgun.NewMailgun(domain, apiKey),
+		MailgunImpl: impl,
 		Name:        name,
 	}
 }
