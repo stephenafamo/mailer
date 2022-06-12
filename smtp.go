@@ -60,34 +60,33 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 	delimeter := "boundary"
 	from := email.FromName + "<" + email.From + ">"
 
+	var tos, ccs, bccs []string
+
 	toNLen := len(email.ToNames) > 0
-	tos := []string{}
 	for k, v := range email.To {
+		var name string
 		if toNLen {
-			tos = append(tos, email.ToNames[k]+"<"+v+">")
-		} else {
-			tos = append(tos, v)
+			name = email.ToNames[k]
 		}
+		tos = append(tos, name+"<"+v+">")
 	}
 
 	ccNLen := len(email.CcNames) > 0
-	ccs := []string{}
 	for k, v := range email.Cc {
+		var name string
 		if ccNLen {
-			ccs = append(ccs, email.ToNames[k]+"<"+v+">")
-		} else {
-			ccs = append(ccs, v)
+			name = email.CcNames[k]
 		}
+		ccs = append(ccs, name+"<"+v+">")
 	}
 
 	bccNLen := len(email.BccNames) > 0
-	bccs := []string{}
 	for k, v := range email.Bcc {
+		var name string
 		if bccNLen {
-			bccs = append(bccs, email.ToNames[k]+"<"+v+">")
-		} else {
-			bccs = append(bccs, v)
+			name = email.BccNames[k]
 		}
+		bccs = append(bccs, name+"<"+v+">")
 	}
 
 	//basic email headers
@@ -97,9 +96,6 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 	msg += fmt.Sprintf("To: %s\r\n", strings.Join(tos, ";"))
 	if len(ccs) > 0 {
 		msg += fmt.Sprintf("Cc: %s\r\n", strings.Join(ccs, ";"))
-	}
-	if len(bccs) > 0 {
-		msg += fmt.Sprintf("Bcc: %s\r\n", strings.Join(bccs, ";"))
 	}
 	if email.ReplyTo != "" {
 		msg += fmt.Sprintf("Reply-To: %s\r\n", email.ReplyToName+"<"+email.ReplyTo+">")
@@ -190,7 +186,7 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 		SMTP,
 		smtp.PlainAuth("", s.Username, s.Password, s.Host),
 		from,
-		tos,
+		append(append(tos, ccs...), bccs...),
 		buf.Bytes(),
 	)
 
