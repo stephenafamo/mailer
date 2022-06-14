@@ -6,6 +6,7 @@ import (
 	"encoding/base64"
 	"fmt"
 	"mime"
+	"net/mail"
 	"net/smtp"
 	"path/filepath"
 	"strings"
@@ -64,29 +65,29 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 
 	toNLen := len(email.ToNames) > 0
 	for k, v := range email.To {
-		var name string
+		var addr = mail.Address{Address: v}
 		if toNLen {
-			name = email.ToNames[k]
+			addr.Name = email.ToNames[k]
 		}
-		tos = append(tos, name+"<"+v+">")
+		tos = append(tos, addr.String())
 	}
 
 	ccNLen := len(email.CcNames) > 0
 	for k, v := range email.Cc {
-		var name string
+		var addr = mail.Address{Address: v}
 		if ccNLen {
-			name = email.CcNames[k]
+			addr.Name = email.CcNames[k]
 		}
-		ccs = append(ccs, name+"<"+v+">")
+		ccs = append(ccs, addr.String())
 	}
 
 	bccNLen := len(email.BccNames) > 0
 	for k, v := range email.Bcc {
-		var name string
+		var addr = mail.Address{Address: v}
 		if bccNLen {
-			name = email.BccNames[k]
+			addr.Name = email.BccNames[k]
 		}
-		bccs = append(bccs, name+"<"+v+">")
+		bccs = append(bccs, addr.String())
 	}
 
 	//basic email headers
@@ -185,7 +186,7 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 	err = smtp.SendMail(
 		SMTP,
 		smtp.PlainAuth("", s.Username, s.Password, s.Host),
-		from,
+		email.From,
 		append(append(tos, ccs...), bccs...),
 		buf.Bytes(),
 	)
