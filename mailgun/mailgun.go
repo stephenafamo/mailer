@@ -5,7 +5,7 @@ import (
 	"context"
 	"encoding/base64"
 	"fmt"
-	"io/ioutil"
+	"io"
 
 	"github.com/mailgun/mailgun-go/v4"
 	"github.com/stephenafamo/mailer"
@@ -36,10 +36,14 @@ func (m Mailgun) Send(ctx context.Context, email mailer.Email) (string, string, 
 
 	toNLen := len(email.ToNames) > 0
 	for k, v := range email.To {
+		var err error
 		if toNLen {
-			message.AddRecipient(email.ToNames[k] + "<" + v + ">")
+			err = message.AddRecipient(email.ToNames[k] + "<" + v + ">")
 		} else {
-			message.AddRecipient(v)
+			err = message.AddRecipient(v)
+		}
+		if err != nil {
+			return "", "", fmt.Errorf("adding recipient %q: %v", k, err)
 		}
 	}
 
@@ -73,7 +77,7 @@ func (m Mailgun) Send(ctx context.Context, email mailer.Email) (string, string, 
 			// Add the attachment inline
 			message.AddReaderInline(
 				attachment.Filename,
-				ioutil.NopCloser(bytes.NewBuffer(b)),
+				io.NopCloser(bytes.NewBuffer(b)),
 			)
 		} else {
 			message.AddBufferAttachment(
