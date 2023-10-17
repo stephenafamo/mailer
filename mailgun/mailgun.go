@@ -1,4 +1,4 @@
-package mailer
+package mailgun
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"io/ioutil"
 
 	"github.com/mailgun/mailgun-go/v4"
+	"github.com/stephenafamo/mailer"
 )
 
 // Mailgun is an instance of the Mailgun mailer
@@ -27,7 +28,7 @@ func NewMailgun(name string, impl *mailgun.MailgunImpl) *Mailgun {
 }
 
 // Send satisfies the mailer interface
-func (m Mailgun) Send(ctx context.Context, email Email) (string, string, error) {
+func (m Mailgun) Send(ctx context.Context, email mailer.Email) (string, string, error) {
 	sender := email.FromName + "<" + email.From + ">"
 
 	message := m.NewMessage(sender, email.Subject, email.TextBody)
