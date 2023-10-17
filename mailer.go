@@ -73,6 +73,5 @@ type Email struct {
 type Attachment struct {
 	Filename string
 	Data     []byte
-	Base64   []byte
 	Inline   bool
 }

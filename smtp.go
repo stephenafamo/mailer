@@ -136,7 +136,6 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 		buf.WriteString(fmt.Sprintf("\r\n--%s\r\n", delimeterOuter))
 
 		for _, attachment := range email.Attachments {
-
 			idHeader := fmt.Sprintf("Content-ID: <%s>\r\n", attachment.Filename)
 			buf.WriteString(idHeader)
 
@@ -158,13 +157,8 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 
 			buf.WriteString("\r\n\r\n")
 
-			b := []byte{}
-			if attachment.Data != nil {
-				b = make([]byte, base64.StdEncoding.EncodedLen(len(attachment.Data)))
-				base64.StdEncoding.Encode(b, attachment.Data)
-			} else if attachment.Base64 != nil {
-				b = attachment.Base64
-			}
+			b := make([]byte, base64.StdEncoding.EncodedLen(len(attachment.Data)))
+			base64.StdEncoding.Encode(b, attachment.Data)
 
 			// write base64 content in lines of up to 76 chars
 			for i, l := 0, len(b); i < l; i++ {

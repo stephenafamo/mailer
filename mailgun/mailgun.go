@@ -1,9 +1,8 @@
-package mailgun
+package mailgunmailer
 
 import (
 	"bytes"
 	"context"
-	"encoding/base64"
 	"fmt"
 	"io"
 
@@ -11,24 +10,24 @@ import (
 	"github.com/stephenafamo/mailer"
 )
 
-// Mailgun is an instance of the Mailgun mailer
-type Mailgun struct {
+// mailgunImpl is an instance of the mailgunImpl mailer
+type mailgunImpl struct {
 	*mailgun.MailgunImpl
-	Name string
+	name string
 }
 
-// NewMailgun creates an instance of the Mailgun mailer
+// New creates an instance of the Mailgun mailer
 // domain (string): Mailgun domain
 // apiKey (string): Mailgun API Key
-func NewMailgun(name string, impl *mailgun.MailgunImpl) *Mailgun {
-	return &Mailgun{
+func New(name string, impl *mailgun.MailgunImpl) *mailgunImpl {
+	return &mailgunImpl{
 		MailgunImpl: impl,
-		Name:        name,
+		name:        name,
 	}
 }
 
 // Send satisfies the mailer interface
-func (m Mailgun) Send(ctx context.Context, email mailer.Email) (string, string, error) {
+func (m mailgunImpl) Send(ctx context.Context, email mailer.Email) (string, string, error) {
 	sender := email.FromName + "<" + email.From + ">"
 
 	message := m.NewMessage(sender, email.Subject, email.TextBody)
@@ -67,17 +66,10 @@ func (m Mailgun) Send(ctx context.Context, email mailer.Email) (string, string, 
 
 	for _, attachment := range email.Attachments {
 		if attachment.Inline {
-			// Decode the base64 attachment
-			b := make([]byte, base64.StdEncoding.DecodedLen(len(attachment.Base64)))
-			_, err := base64.StdEncoding.Decode(b, attachment.Base64)
-			if err != nil {
-				return "", "", fmt.Errorf("Error decoding base64 attachment: %v", err)
-			}
-
 			// Add the attachment inline
 			message.AddReaderInline(
 				attachment.Filename,
-				io.NopCloser(bytes.NewBuffer(b)),
+				io.NopCloser(bytes.NewBuffer(attachment.Data)),
 			)
 		} else {
 			message.AddBufferAttachment(
@@ -93,5 +85,5 @@ func (m Mailgun) Send(ctx context.Context, email mailer.Email) (string, string, 
 
 	_, id, err := m.MailgunImpl.Send(context.Background(), message)
 
-	return m.Name, id, err
+	return m.name, id, err
 }
