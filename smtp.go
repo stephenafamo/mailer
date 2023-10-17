@@ -47,7 +47,6 @@ func (s *SMTP) generateMsgID() (string, error) {
 
 // Send satisfies the mailer interface
 func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
-
 	if email.TextBody == "" && email.HTMLBody == "" {
 		return "", "", fmt.Errorf("Email must have either Text or HTML body")
 	}
@@ -65,7 +64,7 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 
 	toNLen := len(email.ToNames) > 0
 	for k, v := range email.To {
-		var addr = mail.Address{Address: v}
+		addr := mail.Address{Address: v}
 		if toNLen {
 			addr.Name = email.ToNames[k]
 		}
@@ -74,7 +73,7 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 
 	ccNLen := len(email.CcNames) > 0
 	for k, v := range email.Cc {
-		var addr = mail.Address{Address: v}
+		addr := mail.Address{Address: v}
 		if ccNLen {
 			addr.Name = email.CcNames[k]
 		}
@@ -83,14 +82,14 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 
 	bccNLen := len(email.BccNames) > 0
 	for k, v := range email.Bcc {
-		var addr = mail.Address{Address: v}
+		addr := mail.Address{Address: v}
 		if bccNLen {
 			addr.Name = email.BccNames[k]
 		}
 		bccs = append(bccs, addr.String())
 	}
 
-	//basic email headers
+	// basic email headers
 	msg := fmt.Sprintf("Message-ID: %s\r\n", messageID)
 	msg += fmt.Sprintf("Date: %s\r\n", time.Now().Format(time.RFC1123Z))
 	msg += fmt.Sprintf("From: %s\r\n", from)
@@ -114,7 +113,7 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 	msg += fmt.Sprintf("Content-Type: multipart/alternative; boundary=%q\r\n", delimeter)
 
 	if email.TextBody != "" {
-		//place Text message
+		// place Text message
 		msg += fmt.Sprintf("\r\n--%s\r\n", delimeter)
 		msg += "Content-Transfer-Encoding: 7bit\r\n"
 		msg += "Content-Type: text/plain; charset=\"utf-8\"\r\n"
@@ -122,7 +121,7 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 	}
 
 	if email.HTMLBody != "" {
-		//place HTML message
+		// place HTML message
 		msg += fmt.Sprintf("\r\n--%s\r\n", delimeter)
 		msg += "Content-Transfer-Encoding: 7bit\r\n"
 		msg += "Content-Type: text/html; charset=\"utf-8\"\r\n"
