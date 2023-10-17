@@ -12,16 +12,15 @@ import (
 	"strings"
 	"time"
 
-	"github.com/gofrs/uuid/v3"
+	"github.com/gofrs/uuid/v5"
 )
 
 // SMTP is an instance of the SMTP mailer
 type SMTP struct {
-	Name     string
-	Host     string
-	Port     int
-	Username string
-	Password string
+	name string // provider name of this mailer
+	host string
+	port int
+	auth smtp.Auth
 }
 
 // NewSMTP creates an instance of the SMTP mailer
@@ -29,20 +28,19 @@ type SMTP struct {
 // port (int): SMTP port
 // username (string): SMTP username
 // password (string): SMTP password
-func NewSMTP(name, host string, port int, username, password string) *SMTP {
+func NewSMTP(name, host string, port int, auth smtp.Auth) *SMTP {
 	return &SMTP{
-		Name:     name,
-		Host:     host,
-		Port:     port,
-		Username: username,
-		Password: password,
+		name: name,
+		host: host,
+		port: port,
+		auth: auth,
 	}
 }
 
 func (s *SMTP) generateMsgID() (string, error) {
 	u, err := uuid.NewV4()
 
-	return "<" + u.String() + "@" + s.Host + ">", err
+	return "<" + u.String() + "@" + s.host + ">", err
 }
 
 // Send satisfies the mailer interface
@@ -181,14 +179,12 @@ func (s *SMTP) Send(ctx context.Context, email Email) (string, string, error) {
 	// end the email
 	buf.WriteString(fmt.Sprintf("\r\n--%s--\r\n", delimeterOuter))
 
-	SMTP := fmt.Sprintf("%s:%d", s.Host, s.Port)
+	addr := fmt.Sprintf("%s:%d", s.host, s.port)
 	err = smtp.SendMail(
-		SMTP,
-		smtp.PlainAuth("", s.Username, s.Password, s.Host),
-		email.From,
-		append(append(tos, ccs...), bccs...),
+		addr, s.auth,
+		email.From, append(append(tos, ccs...), bccs...),
 		buf.Bytes(),
 	)
 
-	return s.Name, messageID, err
+	return s.name, messageID, err
 }
